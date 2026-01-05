@@ -1,0 +1,22 @@
+# Python
+venv/
+.venv/
+env/
+bin/
+lib/
+include/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# macOS
+.DS_Store
+
+# Sample data and logs
+*.json
+*.log
+!env.example
+
