@@ -16,9 +16,10 @@ This script automates the process of collecting meeting summaries and full trans
 ## Setup
 
 ### 1. Granola Configuration
-Since Granola doesn't have a public API, you need to capture your session data from the browser:
-- Open Granola in your browser and log in.
-- Open Developer Tools (F12) -> Network tab.
+Since Granola doesn't have a public API and the website lacks a login feature, you need to capture your session data from the **desktop application** using Developer Tools:
+- Open the Granola desktop app.
+- Open **Developer Tools** (usually `Cmd+Option+I` or via a debug menu).
+- Go to the **Network** tab.
 - Find any request to `api.granola.ai` (e.g., `get-documents`).
 - Copy the following values from the request headers:
   - `Authorization` (the full `Bearer ...` string).
