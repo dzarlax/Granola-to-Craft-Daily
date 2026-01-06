@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import re
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 
@@ -97,13 +97,13 @@ def format_transcript(segments):
             formatted += f"{prefix}{text}\n\n"
     return formatted.strip()
 
-def filter_today_meetings(documents):
-    """Filters documents created today."""
-    today_str = date.today().isoformat()
-    return [d for d in documents if d.get("created_at", "").startswith(today_str)]
+def filter_meetings_by_date(documents, target_date):
+    """Filters documents created on a specific date."""
+    date_str = target_date.isoformat()
+    return [d for d in documents if d.get("created_at", "").startswith(date_str)]
 
-def send_blocks_to_craft(blocks):
-    """Sends structured blocks to Craft.do Daily Note."""
+def send_blocks_to_craft(blocks, target_date_str):
+    """Sends structured blocks to Craft.do Daily Note for a specific date."""
     if not blocks:
         return
         
@@ -115,7 +115,7 @@ def send_blocks_to_craft(blocks):
     
     payload = {
         "blocks": blocks,
-        "position": {"position": "end", "date": "today"}
+        "position": {"position": "end", "date": target_date_str}
     }
     
     try:
@@ -129,25 +129,29 @@ def send_blocks_to_craft(blocks):
         return False
 
 def main():
-    print(f"Starting granular sync for {date.today()}...")
+    # Calculate yesterday's date
+    yesterday = date.today() - timedelta(days=1)
+    yesterday_str = yesterday.isoformat()
+    
+    print(f"Starting granular sync for yesterday: {yesterday_str}...")
     
     docs = get_granola_documents()
-    today_docs = filter_today_meetings(docs)
+    target_docs = filter_meetings_by_date(docs, yesterday)
     
-    if not today_docs:
-        print("No meetings found for today.")
+    if not target_docs:
+        print(f"No meetings found for {yesterday_str}.")
         return
         
-    print(f"Found {len(today_docs)} meetings. Syncing one by one...")
+    print(f"Found {len(target_docs)} meetings. Syncing one by one...")
     
-    # 1. Start with a main header
+    # 1. Start with a main header for yesterday
     send_blocks_to_craft([{
         "type": "text",
         "textStyle": "h1",
-        "markdown": f"☕️ Granola Meetings ({date.today().isoformat()})"
-    }])
+        "markdown": f"☕️ Granola Meetings ({yesterday_str})"
+    }], yesterday_str)
     
-    for doc in today_docs:
+    for doc in target_docs:
         title = doc.get("title") or "Untitled Meeting"
         print(f"Syncing: {title}...")
         
@@ -192,7 +196,7 @@ def main():
             }
         ]
         
-        success = send_blocks_to_craft(meeting_blocks)
+        success = send_blocks_to_craft(meeting_blocks, yesterday_str)
         if success:
             print(f"✅ Successfully synced: {title}")
         else:
